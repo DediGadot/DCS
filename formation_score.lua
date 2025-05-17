@@ -7,6 +7,9 @@ Load this script through Mission Editor: Triggers -> DO SCRIPT FILE.
 ----------------------- CONFIGURATION -----------------------
 local Score = {}
 
+-- user flag to trigger scoreboard display
+Score.flagShowMessage = "show_message"
+
 Score.weights = {
   kill_air          = 100,
   kill_ground       = 50,
@@ -78,7 +81,9 @@ function scoreHandler:onEvent(event)
       local gid = unit:getGroup():getID()
       if not menuGroups[gid] then
         local sub = missionCommands.addSubMenuForGroup(gid, "Scoreboard")
-        missionCommands.addCommandForGroup(gid, "Show scores", sub, Score.broadcast)
+        missionCommands.addCommandForGroup(gid, "Show scores", sub, function()
+          trigger.action.setUserFlag(Score.flagShowMessage, 1)
+        end)
         menuGroups[gid] = sub
       end
     end
@@ -140,7 +145,11 @@ local function formatScores()
 end
 
 function Score.broadcast()
-  trigger.action.outText(formatScores(), 10)
+  if trigger.misc.getUserFlag(Score.flagShowMessage) ~= 1 then
+    return timer.getTime() + Score.broadcastInterval
+  end
+  trigger.action.outText(formatScores(), 30)
+  trigger.action.setUserFlag(Score.flagShowMessage, 0)
   return timer.getTime() + Score.broadcastInterval
 end
 
