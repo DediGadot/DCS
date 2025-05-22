@@ -1,6 +1,7 @@
 import argparse
 import zipfile
 import io
+import sys
 from collections import defaultdict
 
 
@@ -36,7 +37,6 @@ def parse_fields(line):
         if '=' in token:
             key, value = token.split('=', 1)
             fields[key.strip()] = value.strip().strip('"')
-
     return fields
 
 
