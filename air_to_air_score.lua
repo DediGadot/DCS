@@ -25,7 +25,7 @@ end
 local function getGroupData(name)
   local data = Score.groups[name]
   if not data then
-    data = {
+      data = {
       kills      = 0,
       ff         = 0,
       totalFuel  = 0,
@@ -75,6 +75,9 @@ function scoreHandler:onEvent(event)
     data.panics = data.panics + 1
   elseif event.id == world.event.S_EVENT_CRASH or event.id == world.event.S_EVENT_DEAD then
     data.deaths = data.deaths + 1
+        end
+      end
+    end
   end
 end
 world.addEventHandler(scoreHandler)
