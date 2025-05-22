@@ -25,7 +25,14 @@ end
 local function getGroupData(name)
   local data = Score.groups[name]
   if not data then
-    data = { kills = 0, ff = 0 }
+      data = {
+      kills      = 0,
+      ff         = 0,
+      totalFuel  = 0,
+      killCount  = 0,
+      panics     = 0,
+      deaths     = 0,
+    }
     Score.groups[name] = data
   end
   return data
@@ -58,6 +65,16 @@ function scoreHandler:onEvent(event)
           data.ff = data.ff + 1
         else
           data.kills = data.kills + 1
+          local fuel = unit:getFuel() or 0
+          data.totalFuel = data.totalFuel + fuel * 100
+          data.killCount = data.killCount + 1
+        end
+      end
+    end
+  elseif event.id == world.event.S_EVENT_EJECTION then
+    data.panics = data.panics + 1
+  elseif event.id == world.event.S_EVENT_CRASH or event.id == world.event.S_EVENT_DEAD then
+    data.deaths = data.deaths + 1
         end
       end
     end
@@ -69,7 +86,9 @@ world.addEventHandler(scoreHandler)
 local function formatScores()
   local lines = {}
   for gname, d in pairs(Score.groups) do
-    table.insert(lines, string.format('[%s] A2A kills:%d  FF:%d', gname, d.kills, d.ff))
+    local avgFuel = d.killCount > 0 and d.totalFuel / d.killCount or 0
+    table.insert(lines, string.format('[%s] K:%d FF:%d Panic:%d Deaths:%d AvgKillFuel:%.1f%%',
+      gname, d.kills, d.ff, d.panics, d.deaths, avgFuel))
   end
   return table.concat(lines, '\n')
 end
