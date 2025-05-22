@@ -21,15 +21,22 @@ def open_acmi_lines(path):
 
 
 def parse_fields(line):
+    """Parse a CSV line of an ACMI file into a dict of key/value pairs.
+
+    The first token may be an object id without an explicit key. If so it will
+    be stored under ``Object``.
+    """
+
+    tokens = [t.strip() for t in line.split(',') if t.strip()]
     fields = {}
-    for token in line.split(','):
-        token = token.strip()
-        if not token:
-            continue
+    if tokens and '=' not in tokens[0]:
+        fields['Object'] = tokens[0]
+        tokens = tokens[1:]
+
+    for token in tokens:
         if '=' in token:
             key, value = token.split('=', 1)
-            value = value.strip().strip('"')
-            fields[key.strip()] = value
+            fields[key.strip()] = value.strip().strip('"')
     return fields
 
 
@@ -39,7 +46,7 @@ def categorize_type(type_str):
     s = type_str.lower()
     if 'ship' in s or 'boat' in s or 'naval' in s:
         return 'ship'
-    if 'air' in s or 'wing' in s or 'heli' in s:
+    if any(k in s for k in ['air', 'wing', 'heli', 'plane', 'aircraft']):
         return 'air'
     return 'ground'
 
@@ -105,7 +112,8 @@ def parse_acmi(path):
         else:
             oid = fields.get('Object') or fields.get('ID')
             if oid:
-                objects[oid] = fields
+                existing = objects.setdefault(oid, {})
+                existing.update(fields)
 
     return pilot_stats, group_stats
 
